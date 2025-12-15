@@ -60,6 +60,7 @@
             opacity: 0;
             transform: translateY(30px) scale(0.8);
             margin: 15px 0;
+            letter-spacing: 1px; /* 字符间距 */
         }
 
         .text-container.show .text-line {
@@ -79,6 +80,23 @@
         .text-container.show .text-line:nth-child(4) { animation-delay: 5.5s; }
         .text-container.show .text-line:nth-child(5) { animation-delay: 7s; }
         .text-container.show .text-line:nth-child(6) { animation-delay: 8.5s; }
+
+        /* 特殊字符高亮效果 */
+        .text-line .highlight {
+            display: inline-block;
+            color: #ff69b4;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .text-line .highlight.show {
+            opacity: 1;
+            transform: scale(1.3);
+            text-shadow: 0 0 30px rgba(255, 105, 180, 1),
+                         0 0 60px rgba(255, 105, 180, 0.8),
+                         0 0 90px rgba(255, 105, 180, 0.6);
+        }
 
         .heart-container {
             position: fixed;
@@ -169,6 +187,7 @@
             .text-line {
                 font-size: 1.8rem;
                 margin: 10px 0;
+                letter-spacing: 1px;
             }
             .heart {
                 transform: rotate(-45deg) scale(3.3);
@@ -193,6 +212,7 @@
             .text-line {
                 font-size: 1.4rem;
                 margin: 8px 0;
+                letter-spacing: 1px;
             }
             .heart {
                 transform: rotate(-45deg) scale(2.6);
@@ -323,6 +343,7 @@
 <body>
     <!-- 音乐播放提示遮罩 -->
     <div class="music-prompt" id="musicPrompt">
+        
         <button class="music-prompt-button" id="startMusicBtn">甜蜜点击</button>
     </div>
 
@@ -404,6 +425,46 @@
                 animationStarted = true;
                 animate(0);
             }
+
+            // 文字全部展示完成后（最后一行在8.5s开始，1s动画，再等2s），触发特殊字符高亮
+            // 8.5s + 1s + 2s = 11.5s
+            setTimeout(() => {
+                highlightSpecialCharacters();
+            }, 11500);
+        }
+
+        // 高亮特殊字符
+        function highlightSpecialCharacters() {
+            const textLines = document.querySelectorAll('.text-line');
+            
+            textLines.forEach((line, index) => {
+                const lineNumber = index + 1; // 第几行（1-6）
+                const text = line.textContent;
+                
+                // 将文字拆分成单个字符
+                const chars = text.split('');
+                
+                // 创建新的HTML，将指定位置的字符包装在span中
+                const newHTML = chars.map((char, charIndex) => {
+                    // 第1行高亮第1个字符（索引0），第2行高亮第2个字符（索引1）...
+                    if (charIndex === lineNumber - 1) {
+                        return `<span class="highlight">${char}</span>`;
+                    }
+                    return char;
+                }).join('');
+                
+                line.innerHTML = newHTML;
+            });
+
+            // 逐个显示高亮字符，每个间隔0.3秒
+            textLines.forEach((line, index) => {
+                setTimeout(() => {
+                    const highlight = line.querySelector('.highlight');
+                    if (highlight) {
+                        highlight.classList.add('show');
+                    }
+                }, index * 300);
+            });
         }
 
         // 点击开始按钮
