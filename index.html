@@ -191,18 +191,133 @@
                 }
             }
         }
+
+        /* 音乐播放提示按钮 */
+        .music-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .music-prompt.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .music-prompt-button {
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.6);
+            transition: all 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .music-prompt-button:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(255, 105, 180, 0.6);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 50px rgba(255, 105, 180, 0.9);
+            }
+        }
+
+        .music-prompt-text {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 音乐控制按钮 */
+        .music-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 105, 180, 0.7);
+        }
+
+        .music-control:active {
+            transform: scale(0.95);
+        }
+
+        .music-control::before {
+            content: '🎵';
+            font-size: 30px;
+            animation: musicNote 1s ease-in-out infinite;
+        }
+
+        .music-control.paused::before {
+            content: '🔇';
+            animation: none;
+        }
+
+        @keyframes musicNote {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 音乐播放提示遮罩 -->
+    <div class="music-prompt" id="musicPrompt">
+        <div class="music-prompt-text">🎵 点击开始播放背景音乐 🎵</div>
+        <button class="music-prompt-button" id="startMusicBtn">开始体验</button>
+    </div>
+
+    <!-- 音乐控制按钮 -->
+    <div class="music-control" id="musicControl" style="display: none;"></div>
+
     <canvas id="canvas"></canvas>
     
     <div class="text-container">
-        <div class="text-line">陶得佳人天赐缘</div>
-        <div class="text-line">欣兴相看两不厌</div>
-        <div class="text-line">唯有娜影惹流连</div>
-        <div class="text-line">甘愿为我醉红颜</div>
-        <div class="text-line">此生不渝爱绵绵</div>
-        <div class="text-line">星河共赴守你缘</div>
+        <div class="text-line">我是张三拦截器</div>
+        <div class="text-line">我是张三拦截器</div>
+        <div class="text-line">我是张三拦截器</div>
+        <div class="text-line">我是张三拦截器</div>
+        <div class="text-line">我是张三拦截器</div>
+        <div class="text-line">我是张三拦截器</div>
     </div>
 
     <div class="heart-container">
@@ -210,25 +325,65 @@
     </div>
 
     <!-- 背景音乐 -->
-    <audio id="bgMusic" autoplay loop>
+    <audio id="bgMusic" loop preload="auto">
         <source src="musicyy.mp3" type="audio/mpeg">
         您的浏览器不支持音频播放。
     </audio>
 
     <script>
-        // 背景音乐自动播放（处理浏览器自动播放策略）
+        // 背景音乐控制
         const bgMusic = document.getElementById('bgMusic');
-        
-        // 尝试自动播放
-        bgMusic.play().catch(() => {
-            // 如果自动播放被阻止，在用户首次交互时播放
-            const playOnInteraction = () => {
-                bgMusic.play();
-                document.removeEventListener('click', playOnInteraction);
-                document.removeEventListener('touchstart', playOnInteraction);
-            };
-            document.addEventListener('click', playOnInteraction);
-            document.addEventListener('touchstart', playOnInteraction);
+        const musicPrompt = document.getElementById('musicPrompt');
+        const startMusicBtn = document.getElementById('startMusicBtn');
+        const musicControl = document.getElementById('musicControl');
+        let isPlaying = false;
+
+        // 开始播放音乐
+        function startMusic() {
+            bgMusic.play().then(() => {
+                isPlaying = true;
+                musicPrompt.classList.add('hidden');
+                musicControl.style.display = 'flex';
+                musicControl.classList.remove('paused');
+                
+                // 完全移除提示遮罩
+                setTimeout(() => {
+                    musicPrompt.style.display = 'none';
+                }, 500);
+            }).catch(err => {
+                console.log('音乐播放失败:', err);
+                alert('音乐播放失败，请检查音频文件是否存在');
+            });
+        }
+
+        // 点击开始按钮
+        startMusicBtn.addEventListener('click', startMusic);
+
+        // 音乐控制按钮（暂停/播放）
+        musicControl.addEventListener('click', () => {
+            if (isPlaying) {
+                bgMusic.pause();
+                isPlaying = false;
+                musicControl.classList.add('paused');
+            } else {
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    musicControl.classList.remove('paused');
+                }).catch(err => {
+                    console.log('音乐播放失败:', err);
+                });
+            }
+        });
+
+        // 监听音频播放状态
+        bgMusic.addEventListener('play', () => {
+            isPlaying = true;
+            musicControl.classList.remove('paused');
+        });
+
+        bgMusic.addEventListener('pause', () => {
+            isPlaying = false;
+            musicControl.classList.add('paused');
         });
 
         // 画布设置
