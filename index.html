@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>❤️恋爱100天纪念日❤️</title>
+    <title>恋爱100天纪念日 ❤️</title>
     <style>
         * {
             margin: 0;
@@ -209,7 +209,28 @@
         <div class="heart"></div>
     </div>
 
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" autoplay loop>
+        <source src="musicyy.mp3" type="audio/mpeg">
+        您的浏览器不支持音频播放。
+    </audio>
+
     <script>
+        // 背景音乐自动播放（处理浏览器自动播放策略）
+        const bgMusic = document.getElementById('bgMusic');
+        
+        // 尝试自动播放
+        bgMusic.play().catch(() => {
+            // 如果自动播放被阻止，在用户首次交互时播放
+            const playOnInteraction = () => {
+                bgMusic.play();
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('touchstart', playOnInteraction);
+            };
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('touchstart', playOnInteraction);
+        });
+
         // 画布设置
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
