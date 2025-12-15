@@ -25,6 +25,12 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #canvas.show {
+            opacity: 1;
         }
 
         .text-container {
@@ -36,6 +42,12 @@
             text-align: center;
             width: 80%;
             max-width: 600px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .text-container.show {
+            opacity: 1;
         }
 
         .text-line {
@@ -48,6 +60,9 @@
             opacity: 0;
             transform: translateY(30px) scale(0.8);
             margin: 15px 0;
+        }
+
+        .text-container.show .text-line {
             animation: fadeInUp 1s ease forwards;
         }
 
@@ -58,21 +73,24 @@
             }
         }
 
-        .text-line:nth-child(1) { animation-delay: 1s; }
-        .text-line:nth-child(2) { animation-delay: 2.5s; }
-        .text-line:nth-child(3) { animation-delay: 4s; }
-        .text-line:nth-child(4) { animation-delay: 5.5s; }
-        .text-line:nth-child(5) { animation-delay: 7s; }
-        .text-line:nth-child(6) { animation-delay: 8.5s; }
+        .text-container.show .text-line:nth-child(1) { animation-delay: 1s; }
+        .text-container.show .text-line:nth-child(2) { animation-delay: 2.5s; }
+        .text-container.show .text-line:nth-child(3) { animation-delay: 4s; }
+        .text-container.show .text-line:nth-child(4) { animation-delay: 5.5s; }
+        .text-container.show .text-line:nth-child(5) { animation-delay: 7s; }
+        .text-container.show .text-line:nth-child(6) { animation-delay: 8.5s; }
 
         .heart-container {
             position: fixed;
             top: calc(50% + 50px);
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(0);
             z-index: 3;
             pointer-events: none;
             opacity: 0;
+        }
+
+        .heart-container.show {
             animation: showHeart 2s ease-out forwards;
             animation-delay: 10s;
         }
@@ -97,11 +115,14 @@
             height: 100px;
             background-color: #ff69b4; /* 使用不透明颜色 */
             transform: rotate(-45deg) scale(4.2);
-            animation: heartBeat 1.5s ease-in-out infinite;
-            animation-delay: 12s;
             opacity: 0.6; /* 整体设置透明度，避免内部线条拼接痕迹 */
             filter: drop-shadow(0 0 50px rgba(255, 105, 180, 0.9)) 
                     drop-shadow(0 0 30px rgba(255, 182, 193, 0.6));
+        }
+
+        .heart-container.show .heart {
+            animation: heartBeat 1.5s ease-in-out infinite;
+            animation-delay: 12s;
         }
 
         .heart::before,
@@ -336,10 +357,14 @@
         const musicPrompt = document.getElementById('musicPrompt');
         const startMusicBtn = document.getElementById('startMusicBtn');
         const musicControl = document.getElementById('musicControl');
+        const canvas = document.getElementById('canvas');
+        const textContainer = document.querySelector('.text-container');
+        const heartContainer = document.querySelector('.heart-container');
         let isPlaying = false;
+        let animationStarted = false;
 
-        // 开始播放音乐
-        function startMusic() {
+        // 开始体验（播放音乐并启动所有动画）
+        function startExperience() {
             bgMusic.play().then(() => {
                 isPlaying = true;
                 musicPrompt.classList.add('hidden');
@@ -350,14 +375,40 @@
                 setTimeout(() => {
                     musicPrompt.style.display = 'none';
                 }, 500);
+
+                // 启动所有页面内容
+                startPageContent();
             }).catch(err => {
                 console.log('音乐播放失败:', err);
-                alert('音乐播放失败，请检查音频文件是否存在');
+                // 即使音乐播放失败，也启动页面内容
+                musicPrompt.classList.add('hidden');
+                setTimeout(() => {
+                    musicPrompt.style.display = 'none';
+                }, 500);
+                startPageContent();
             });
         }
 
+        // 启动页面内容
+        function startPageContent() {
+            // 显示画布
+            canvas.classList.add('show');
+            
+            // 显示文字容器（触发文字动画）
+            textContainer.classList.add('show');
+            
+            // 显示爱心容器（触发爱心动画）
+            heartContainer.classList.add('show');
+            
+            // 启动烟花动画
+            if (!animationStarted) {
+                animationStarted = true;
+                animate(0);
+            }
+        }
+
         // 点击开始按钮
-        startMusicBtn.addEventListener('click', startMusic);
+        startMusicBtn.addEventListener('click', startExperience);
 
         // 音乐控制按钮（暂停/播放）
         musicControl.addEventListener('click', () => {
@@ -386,8 +437,7 @@
             musicControl.classList.add('paused');
         });
 
-        // 画布设置
-        const canvas = document.getElementById('canvas');
+        // 画布设置（但不立即启动动画）
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -579,13 +629,14 @@
             canvas.height = window.innerHeight;
         });
 
-        // 点击创建烟花
+        // 点击创建烟花（只在动画启动后生效）
         canvas.addEventListener('click', (e) => {
-            fireworks.push(new Firework(e.clientX, canvas.height));
+            if (animationStarted) {
+                fireworks.push(new Firework(e.clientX, canvas.height));
+            }
         });
 
-        // 启动动画
-        animate(0);
+        // 注意：不在这里启动动画，而是在用户点击"开始体验"后启动
     </script>
 </body>
 </html>
